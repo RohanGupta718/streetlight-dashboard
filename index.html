@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Smart Street Light Dashboard</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0; background: #f0f4f8; color: #222;
+      display: flex; flex-direction: column; min-height: 100vh;
+    }
+    header {
+      background: #263238; color: #fff; padding: 16px; position: relative;
+      text-align: center;
+    }
+    header h1 { margin: 0; font-size: 1.8rem; }
+    #countdown {
+      position: absolute; top: 16px; right: 16px;
+      font-size: 0.9rem; color: #ccc;
+    }
+    .dashboard-summary {
+      display: flex; justify-content: center; gap: 16px; margin: 16px 0;
+    }
+    .summary-card {
+      background: #fff; padding: 12px 24px; border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); font-weight: 500;
+    }
+    #loading { display: flex; justify-content: center; margin-top: 32px; }
+    .spinner {
+      border: 6px solid #ddd; border-top: 6px solid #1976d2;
+      border-radius: 50%; width: 48px; height: 48px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0%{transform:rotate(0)}100%{transform:rotate(360deg)} }
+    .pillar-container {
+      display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;
+      margin: 24px 0;
+    }
+    .pillar-card {
+      background:#fff; padding:16px; width:200px; border-radius:8px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.1); position:relative;
+    }
+    .pillar-card h2 { margin:0 0 8px; font-size:1.2rem; color:#1976d2; }
+    .status { font-size:2rem; margin:8px 0; }
+    .status.on { color:#43a047 }
+    .status.off { color:#e53935 }
+    .indicator {
+      position:absolute; top:12px; right:12px; font-size:1.2rem;
+    }
+    .indicator.active { color:#43a047 }
+    .indicator.inactive { color:#e53935 }
+    .updated { font-size:0.85rem; color:#555 }
+    .updated.stale { color:#e53935; font-weight:500 }
+    #last-updated { text-align:center; margin-top:auto; padding:16px; }
+    #error { text-align:center; color:#e53935; margin-top:16px; }
+    footer {
+      background:#263238; color:#fff; text-align:center; padding:8px 0;
+      margin-top:auto; font-size:0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Smart Street Light Dashboard</h1>
+    <div id="countdown">Next update in: 15s</div>
+  </header>
+
+  <div class="dashboard-summary">
+    <div class="summary-card" id="sum-on">ON: --</div>
+    <div class="summary-card" id="sum-off">OFF: --</div>
+  </div>
+
+  <div id="loading"><div class="spinner"></div></div>
+  <div id="error"></div>
+
+  <div class="pillar-container" id="pillars" style="display:none;">
+    <div class="pillar-card">
+      <h2>Pillar 1</h2>
+      <div class="status off" id="s0">--</div>
+      <div class="indicator inactive" id="i0">●</div>
+      <div class="updated stale" id="u0">Last update: --</div>
+    </div>
+    <div class="pillar-card">
+      <h2>Pillar 2</h2>
+      <div class="status off" id="s1">--</div>
+      <div class="indicator inactive" id="i1">●</div>
+      <div class="updated stale" id="u1">Last update: --</div>
+    </div>
+    <div class="pillar-card">
+      <h2>Pillar 3</h2>
+      <div class="status off" id="s2">--</div>
+      <div class="indicator inactive" id="i2">●</div>
+      <div class="updated stale" id="u2">Last update: --</div>
+    </div>
+    <div class="pillar-card">
+      <h2>Pillar 4</h2>
+      <div class="status off" id="s3">--</div>
+      <div class="indicator inactive" id="i3">●</div>
+      <div class="updated stale" id="u3">Last update: --</div>
+    </div>
+  </div>
+
+  <div id="last-updated">Last update: --</div>
+  <footer>&copy; 2025 Smart Street Light &mdash; Powered by ThingSpeak</footer>
+
+  <script>
+    // ────────────────────────────────────────────────────────────────────────────
+    // CHANGE these to match your channel:
+    const CHANNEL    = "2973853";
+    const READ_KEY   = "";    // if your channel is private, put its READ API key here
+    // ────────────────────────────────────────────────────────────────────────────
+
+    const BASE_URL = READ_KEY
+      ? `https://api.thingspeak.com/channels/${CHANNEL}/feeds.json?api_key=${READ_KEY}&results=1`
+      : `https://api.thingspeak.com/channels/${CHANNEL}/feeds.json?results=1`;
+
+    const INTERVAL = 15000;      // ms between fetches
+    let countdown  = INTERVAL/1000;
+
+    const statusEls  = [...Array(4)].map((_,i)=>document.getElementById(`s${i}`));
+    const indicator  = [...Array(4)].map((_,i)=>document.getElementById(`i${i}`));
+    const updatedEls = [...Array(4)].map((_,i)=>document.getElementById(`u${i}`));
+    const sumOn      = document.getElementById("sum-on");
+    const sumOff     = document.getElementById("sum-off");
+    const loading    = document.getElementById("loading");
+    const errorEl    = document.getElementById("error");
+    const pillars    = document.getElementById("pillars");
+    const lastUp     = document.getElementById("last-updated");
+    const countDom   = document.getElementById("countdown");
+
+    function fetchData(){
+      loading.style.display="flex";
+      errorEl.textContent="";
+      pillars.style.display="none";
+
+      fetch(BASE_URL)
+        .then(r=>{ if(!r.ok) throw r.status; return r.json() })
+        .then(data=>{
+          const feed = data.feeds[0];
+          const vals = [feed.field1, feed.field2, feed.field3, feed.field4];
+          const ts   = new Date(feed.created_at);
+          lastUp.textContent = `Last update: ${ts.toLocaleString()}`;
+
+          let onC=0, offC=0;
+          vals.forEach((v,i)=>{
+            const isOn = v==="1";
+            statusEls[i].textContent = isOn?"ON":"OFF";
+            statusEls[i].className     = `status ${isOn?"on":"off"}`;
+            isOn? onC++ : offC++;
+
+            const age = (new Date() - ts)/1000;
+            const isFresh = age<=30;
+            indicator[i].className = `indicator ${isFresh?"active":"inactive"}`;
+            updatedEls[i].className= `updated ${isFresh?"":"stale"}`;
+            updatedEls[i].textContent = `Last update: ${ts.toLocaleString()}`;
+          });
+
+          sumOn.textContent  = `ON: ${onC}`;
+          sumOff.textContent = `OFF: ${offC}`;
+
+          loading.style.display="none";
+          pillars.style.display="flex";
+        })
+        .catch(err=>{
+          console.error(err);
+          loading.style.display="none";
+          errorEl.textContent="Error loading data. Retrying…";
+        });
+
+      countdown = INTERVAL/1000;
+    }
+
+    fetchData();
+    setInterval(fetchData, INTERVAL);
+    setInterval(()=>{
+      countdown--;
+      if(countdown<0) countdown = INTERVAL/1000;
+      countDom.textContent = `Next update in: ${countdown}s`;
+    },1000);
+  </script>
+</body>
+</html>
