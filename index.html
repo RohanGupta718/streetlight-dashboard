@@ -253,7 +253,8 @@
           const vals = [feed.field1, feed.field2, feed.field3, feed.field4];
           const ts   = new Date(feed.created_at);
           window._lastUpdateTS = ts; // store globally for timer
-          lastUp.textContent = `Last update: 0 seconds ago`;
+          window._lastUpdateTS_string = ts.toLocaleString();
+          lastUp.textContent = `Last update: ${window._lastUpdateTS_string}`;
 
 
           let onC=0, offC=0;
@@ -271,7 +272,7 @@
             const isFresh = age<=30;
             indicator[i].className = `indicator ${isFresh?"active":"inactive"}`;
             updatedEls[i].className= `updated ${isFresh?"":"stale"}`;
-            updatedEls[i].setAttribute('data-last-ts', ts.getTime());
+            updatedEls[i].setAttribute('data-last-ts', Date.now());
             updatedEls[i].textContent = `Last update: 0 seconds ago`;
           });
 
@@ -310,12 +311,10 @@
         }
       });
       // Update global last update
-      if(window._lastUpdateTS) {
-        const sec = Math.floor((Date.now() - window._lastUpdateTS.getTime())/1000);
-        lastUp.textContent = `Last update: ${sec} second${sec!==1?'s':''} ago`;
+      if(window._lastUpdateTS_string) {
+        lastUp.textContent = `Last update: ${window._lastUpdateTS_string}`;
       }
     },1000);
   </script>
 </body>
 </html>
-	
