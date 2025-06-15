@@ -242,7 +242,8 @@
           const feed = data.feeds[0];
           const vals = [feed.field1, feed.field2, feed.field3, feed.field4];
           const ts   = new Date(feed.created_at);
-          lastUp.textContent = `Last update: ${ts.toLocaleString()}`;
+          window._lastUpdateTS = ts; // store globally for timer
+          lastUp.textContent = `Last update: 0 seconds ago`;
 
           let onC=0, offC=0;
           vals.forEach((v,i)=>{
@@ -258,7 +259,8 @@
             const isFresh = age<=30;
             indicator[i].className = `indicator ${isFresh?"active":"inactive"}`;
             updatedEls[i].className= `updated ${isFresh?"":"stale"}`;
-            updatedEls[i].textContent = `Last update: ${ts.toLocaleString()}`;
+            updatedEls[i].setAttribute('data-last-ts', ts.getTime());
+            updatedEls[i].textContent = `Last update: 0 seconds ago`;
           });
 
           sumOn.textContent  = `ON: ${onC}`;
@@ -282,6 +284,20 @@
       countdown--;
       if(countdown<0) countdown = INTERVAL/1000;
       countDom.textContent = `Next update in: ${countdown}s`;
+      // Update 'seconds ago' for each pillar
+      const now = Date.now();
+      updatedEls.forEach((el)=>{
+        const last = parseInt(el.getAttribute('data-last-ts'),10);
+        if (!isNaN(last)) {
+          const sec = Math.floor((now - last)/1000);
+          el.textContent = `Last update: ${sec} second${sec!==1?'s':''} ago`;
+        }
+      });
+      // Update global last update
+      if(window._lastUpdateTS) {
+        const sec = Math.floor((Date.now() - window._lastUpdateTS.getTime())/1000);
+        lastUp.textContent = `Last update: ${sec} second${sec!==1?'s':''} ago`;
+      }
     },1000);
   </script>
 </body>
