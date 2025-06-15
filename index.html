@@ -234,7 +234,6 @@
     function fetchData(){
       loading.style.display="flex";
       errorEl.textContent="";
-      pillars.style.display="none";
 
       fetch(BASE_URL)
         .then(r=>{ if(!r.ok) throw r.status; return r.json() })
@@ -267,7 +266,6 @@
           sumOff.textContent = `OFF: ${offC}`;
 
           loading.style.display="none";
-          pillars.style.display="flex";
         })
         .catch(err=>{
           console.error(err);
