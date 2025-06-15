@@ -62,20 +62,18 @@
       -webkit-backdrop-filter: blur(8px);
       padding:24px 18px 18px 18px; min-width:200px; border-radius:14px;
       box-shadow:0 4px 18px rgba(25, 118, 210, 0.10), 0 2px 8px rgba(0,0,0,0.08);
-      position:relative; transition: box-shadow 0.18s, transform 0.18s, box-shadow 0.18s;
+      position:relative; transition: box-shadow 0.18s, transform 0.18s, box-shadow 0.18s, background 0.18s;
       border: 1.5px solid #e3eaf2;
       overflow: hidden;
     }
     .pillar-card:hover {
       transform: translateY(-6px) scale(1.03);
     }
-    .pillar-card.on:hover {
-      box-shadow: 0 0 24px 6px #43a04788, 0 8px 32px rgba(25, 118, 210, 0.18), 0 4px 16px rgba(0,0,0,0.12);
-      border-color: #43a047;
+    .pillar-card.on {
+      background: linear-gradient(120deg, rgba(200, 230, 201, 0.25) 0%, rgba(255,255,255,0.82) 100%);
     }
-    .pillar-card.off:hover {
-      box-shadow: 0 0 24px 6px #e5393588, 0 8px 32px rgba(229, 57, 53, 0.10), 0 4px 16px rgba(0,0,0,0.12);
-      border-color: #e53935;
+    .pillar-card.off {
+      background: linear-gradient(120deg, rgba(239, 154, 154, 0.22) 0%, rgba(255,255,255,0.82) 100%);
     }
     .pillar-card h2 { margin:0 0 12px; font-size:1.25rem; color:#1976d2; letter-spacing: 0.5px; }
     .status { font-size:2rem; margin:8px 0; font-weight: 700; letter-spacing: 1px; }
