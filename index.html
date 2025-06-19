@@ -135,6 +135,20 @@
       background: #e3f2fd;
       border-radius: 4px;
     }
+    .edit-loc-btn {
+      margin-left: 8px;
+      font-size: 0.85em;
+      padding: 2px 10px;
+      border-radius: 4px;
+      border: 1px solid #90caf9;
+      background: #e3f2fd;
+      color: #1976d2;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .edit-loc-btn:active {
+      background: #bbdefb;
+    }
 
     /* Responsive styles for mobile */
     @media (max-width: 700px) {
@@ -225,7 +239,7 @@
   <div class="pillar-container" id="pillars" style="display:none;">
     <div class="pillar-card" id="card0">
       <h2>Pillar 1</h2>
-      <div class="location">Location: <span class="location-name" id="loc0" contenteditable="true">Main St</span></div>
+      <div class="location">Location: <span class="location-name" id="loc0">Main St</span> <button class="edit-loc-btn" id="edit0" type="button">Edit</button></div>
       <span class="lightbulb off" id="b0">
         <svg viewBox="0 0 48 48" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="bulb0-outline" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round">
@@ -241,7 +255,7 @@
     </div>
     <div class="pillar-card" id="card1">
       <h2>Pillar 2</h2>
-      <div class="location">Location: <span class="location-name" id="loc1" contenteditable="true">2nd Ave</span></div>
+      <div class="location">Location: <span class="location-name" id="loc1">2nd Ave</span> <button class="edit-loc-btn" id="edit1" type="button">Edit</button></div>
       <span class="lightbulb off" id="b1">
         <svg viewBox="0 0 48 48" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="bulb1-outline" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round">
@@ -257,7 +271,7 @@
     </div>
     <div class="pillar-card" id="card2">
       <h2>Pillar 3</h2>
-      <div class="location">Location: <span class="location-name" id="loc2" contenteditable="true">Park Entrance</span></div>
+      <div class="location">Location: <span class="location-name" id="loc2">Park Entrance</span> <button class="edit-loc-btn" id="edit2" type="button">Edit</button></div>
       <span class="lightbulb off" id="b2">
         <svg viewBox="0 0 48 48" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="bulb2-outline" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round">
@@ -273,7 +287,7 @@
     </div>
     <div class="pillar-card" id="card3">
       <h2>Pillar 4</h2>
-      <div class="location">Location: <span class="location-name" id="loc3" contenteditable="true">Library Corner</span></div>
+      <div class="location">Location: <span class="location-name" id="loc3">Library Corner</span> <button class="edit-loc-btn" id="edit3" type="button">Edit</button></div>
       <span class="lightbulb off" id="b3">
         <svg viewBox="0 0 48 48" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="bulb3-outline" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round">
@@ -404,6 +418,7 @@
 
     // Location editing and persistence
     const locationEls = [...Array(4)].map((_,i)=>document.getElementById(`loc${i}`));
+    const editBtns = [...Array(4)].map((_,i)=>document.getElementById(`edit${i}`));
     const LOCATION_KEY = 'pillar_locations';
     function loadLocations() {
       const saved = localStorage.getItem(LOCATION_KEY);
@@ -420,9 +435,33 @@
       const arr = locationEls.map(el => el.textContent);
       localStorage.setItem(LOCATION_KEY, JSON.stringify(arr));
     }
-    locationEls.forEach(el => {
-      el.addEventListener('input', saveLocations);
-      el.addEventListener('blur', saveLocations);
+    function makeEditable(i) {
+      const el = locationEls[i];
+      el.setAttribute('contenteditable', 'true');
+      el.focus();
+      editBtns[i].textContent = 'Save';
+    }
+    function makeNonEditable(i, save=true) {
+      const el = locationEls[i];
+      el.removeAttribute('contenteditable');
+      editBtns[i].textContent = 'Edit';
+      if (save) saveLocations();
+    }
+    locationEls.forEach((el, i) => {
+      editBtns[i].addEventListener('click', () => {
+        if (el.isContentEditable) {
+          makeNonEditable(i);
+        } else {
+          makeEditable(i);
+        }
+      });
+      el.addEventListener('blur', () => makeNonEditable(i));
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          el.blur();
+        }
+      });
     });
     loadLocations();
   </script>
