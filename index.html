@@ -152,7 +152,7 @@
   <div class="pillar-container" id="pillars" style="display:none;">
     <div class="pillar-card" id="card0">
       <h2>Pillar 1</h2>
-      <div class="location">Location: <span class="location-name">(Insert Location)</span></div>
+      <div class="location">Location: <span class="location-name" id="loc0" contenteditable="true">Main St</span></div>
       <span class="lightbulb off" id="b0">
         <svg viewBox="0 0 48 48" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="bulb0-outline" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round">
@@ -168,7 +168,7 @@
     </div>
     <div class="pillar-card" id="card1">
       <h2>Pillar 2</h2>
-      <div class="location">Location: <span class="location-name">(Insert Location)</span></div>
+      <div class="location">Location: <span class="location-name" id="loc1" contenteditable="true">2nd Ave</span></div>
       <span class="lightbulb off" id="b1">
         <svg viewBox="0 0 48 48" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="bulb1-outline" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round">
@@ -184,7 +184,7 @@
     </div>
     <div class="pillar-card" id="card2">
       <h2>Pillar 3</h2>
-      <div class="location">Location: <span class="location-name">(Insert Location)</span></div>
+      <div class="location">Location: <span class="location-name" id="loc2" contenteditable="true">Park Entrance</span></div>
       <span class="lightbulb off" id="b2">
         <svg viewBox="0 0 48 48" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="bulb2-outline" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round">
@@ -200,7 +200,7 @@
     </div>
     <div class="pillar-card" id="card3">
       <h2>Pillar 4</h2>
-      <div class="location">Location: <span class="location-name">(Insert Location)</span></div>
+      <div class="location">Location: <span class="location-name" id="loc3" contenteditable="true">Library Corner</span></div>
       <span class="lightbulb off" id="b3">
         <svg viewBox="0 0 48 48" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g id="bulb3-outline" stroke="#222" stroke-width="4" fill="none" stroke-linecap="round">
@@ -328,6 +328,30 @@
         lastUp.textContent = `Last update: ${window._lastUpdateTS_string}`;
       }
     },1000);
+
+    // Location editing and persistence
+    const locationEls = [...Array(4)].map((_,i)=>document.getElementById(`loc${i}`));
+    const LOCATION_KEY = 'pillar_locations';
+    function loadLocations() {
+      const saved = localStorage.getItem(LOCATION_KEY);
+      if (saved) {
+        try {
+          const arr = JSON.parse(saved);
+          arr.forEach((val, i) => {
+            if (val && locationEls[i]) locationEls[i].textContent = val;
+          });
+        } catch {}
+      }
+    }
+    function saveLocations() {
+      const arr = locationEls.map(el => el.textContent);
+      localStorage.setItem(LOCATION_KEY, JSON.stringify(arr));
+    }
+    locationEls.forEach(el => {
+      el.addEventListener('input', saveLocations);
+      el.addEventListener('blur', saveLocations);
+    });
+    loadLocations();
   </script>
 </body>
 </html>
