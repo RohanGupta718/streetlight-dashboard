@@ -305,7 +305,6 @@
 
 
   <div id="last-updated">Last update: --</div>
-  <footer>&copy; 2025 Smart Street Light &mdash; Powered by ThingSpeak</footer>
 
 
   <script>
@@ -360,25 +359,35 @@
           let onC=0, offC=0;
           vals.forEach((v,i)=>{
             const isOn = v==="1";
-            statusEls[i].textContent = isOn?"ON":"OFF";
-            statusEls[i].className     = `status ${isOn?"on":"off"}`;
-            bulbEls[i].className = `lightbulb ${isOn?"on":"off"}`;
-            bulbSVGs[i].setAttribute("stroke", isOn ? "#43a047" : "#e53935");
-            cardEls[i].className = `pillar-card ${isOn?"on":"off"}`;
+            // Only update if changed
+            const currentStatus = statusEls[i].textContent;
+            const newStatus = isOn ? "ON" : "OFF";
+            if (currentStatus !== newStatus) {
+              statusEls[i].textContent = newStatus;
+              statusEls[i].className     = `status ${isOn?"on":"off"}`;
+              bulbEls[i].className = `lightbulb ${isOn?"on":"off"}`;
+              bulbSVGs[i].setAttribute("stroke", isOn ? "#43a047" : "#e53935");
+              cardEls[i].className = `pillar-card ${isOn?"on":"off"}`;
+            }
+            if (indicator[i].className !== `indicator ${((new Date() - ts)/1000)<=30?"active":"inactive"}`) {
+              const age = (new Date() - ts)/1000;
+              const isFresh = age<=30;
+              indicator[i].className = `indicator ${isFresh?"active":"inactive"}`;
+              updatedEls[i].className= `updated ${isFresh?"":"stale"}`;
+              updatedEls[i].setAttribute('data-last-ts', Date.now());
+              updatedEls[i].textContent = `Last update: 0 seconds ago`;
+            }
             isOn? onC++ : offC++;
-
-
-            const age = (new Date() - ts)/1000;
-            const isFresh = age<=30;
-            indicator[i].className = `indicator ${isFresh?"active":"inactive"}`;
-            updatedEls[i].className= `updated ${isFresh?"":"stale"}`;
-            updatedEls[i].setAttribute('data-last-ts', Date.now());
-            updatedEls[i].textContent = `Last update: 0 seconds ago`;
           });
 
 
-          sumOn.textContent  = `ON: ${onC}`;
-          sumOff.textContent = `OFF: ${offC}`;
+          // Only update summary if changed
+          const currentOn = sumOn.textContent;
+          const currentOff = sumOff.textContent;
+          const newOn = `ON: ${onC}`;
+          const newOff = `OFF: ${offC}`;
+          if (currentOn !== newOn) sumOn.textContent = newOn;
+          if (currentOff !== newOff) sumOff.textContent = newOff;
 
 
           loading.style.display="none";
